@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { HomeLayout } from 'fumadocs-ui/layouts/home';
 import { baseOptions } from '@/lib/layout.shared';
+import { Sparkles } from 'lucide-react';
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute('/(home)/')({
   component: Home,
 });
 
@@ -10,7 +11,10 @@ function Home() {
   return (
     <HomeLayout {...baseOptions()}>
       <div className="flex flex-col flex-1 justify-center px-4 py-8 text-center">
-        <h1 className="font-medium text-xl mb-4">Fumadocs on Tanstack Start.</h1>
+        <h1 className="font-medium text-xl mb-4 flex items-center gap-2 justify-center">
+          Keep Mind
+          <Sparkles/>
+        </h1>
         <Link
           to="/docs/$"
           params={{
@@ -18,7 +22,7 @@ function Home() {
           }}
           className="px-3 py-2 rounded-lg bg-fd-primary text-fd-primary-foreground font-medium text-sm mx-auto"
         >
-          Open Docs
+          开始
         </Link>
       </div>
     </HomeLayout>

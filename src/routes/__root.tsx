@@ -1,5 +1,4 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from '@tanstack/react-router';
-import * as React from 'react';
 import appCss from '@/styles/app.css?url';
 import { RootProvider } from 'fumadocs-ui/provider/tanstack';
 
@@ -14,7 +13,7 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Fumadocs on TanStack Start',
+        title: 'keepmind',
       },
     ],
     links: [{ rel: 'stylesheet', href: appCss }],

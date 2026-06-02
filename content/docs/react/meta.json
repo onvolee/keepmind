@@ -1,0 +1,12 @@
+{
+  "title": "react",
+  "description": "react知识体系",
+  "icon": "PanelsTopLeft",
+  "root": true,
+  "pages": [
+    "---Introduction---",
+    "index",
+    "---knowledge---",
+    "basic/index"
+  ]
+}
