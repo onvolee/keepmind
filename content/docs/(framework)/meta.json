@@ -1,10 +1,6 @@
 {
-  "title": "目录",
+  "title": "总览",
   "description": "简介",
   "icon": "Building",
-  "root": true,
-  "pages": [
-    "---Introduction---",
-    "index"
-  ]
+  "root": true
 }

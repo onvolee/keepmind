@@ -13,10 +13,14 @@ button.addEventListener('click', event => {
 })
 ```
 
-<NativeSyntheticPropagationDemo />
+<SyntheticEvent />
+
+<SyntheticEvent stopPropagation />
 
 在原生事件中阻止冒泡时，事件无法继续冒泡到 React 监听的 root，所以后续 React 合成事件不会执行。
 
 在 React 合成事件中阻止冒泡时，只会阻止 React 合成事件系统里的继续传播；此时原生冒泡事件已经按浏览器事件流执行过了，所以不会被“倒回去”取消。
 
 原因是 React 合成事件本质上是事件委托：React 在 root 上统一监听原生事件，等原生事件冒泡到 root 后，再由 React 分发对应组件的合成事件。
+
+<NativeSyntheticPropagationDemo />
