@@ -1,0 +1,12 @@
+{
+  "title": "web",
+  "description": "web知识体系",
+  "icon": "PanelsTopLeft",
+  "root": true,
+  "pages": [
+    "---Introduction---",
+    "index",
+    "---knowledge---",
+    "...basic"
+  ]
+}

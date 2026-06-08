@@ -78,12 +78,15 @@ dom.addEventListener(type, (`event`) => ) 中 `Event` 参数中一些关键变�
 * composedPath()：返回事件传播路径
 * defaultPrevented：默认行为是否已经被阻止
 
-tips: 大部分事件都会默认冒泡, 但这些事件 `focus`, `blur`, `mouseenter`, `mouseleave`, `load`, `error` 不冒泡。
-`focus/blur` 对应可冒泡版本是 `focusin/focusout`。
+<Tip>
+大部分事件都会默认冒泡, 但这些事件 `focus`, `blur`, `mouseenter`, `mouseleave`, `load`, `error` 不冒泡。<br/>
+`focus/blur` 对应可冒泡版本是 `focusin/focusout`。<br/>
 `mouseenter/mouseleave` 对应可冒泡的相近事件是 `mouseover/mouseout`。
+</Tip>
 
-
-tips: event.stopImmediatePropagation() 作用就是当前元素上的其他监听器也阻止，例如btn注册两个监听器，执行该函数后，该元素上的其他监听器也阻止冒泡。
+<Tip>
+`event.stopImmediatePropagation()` 作用就是当前元素上的其他监听器也阻止，例如btn注册两个监听器，执行该函数后，该元素上的其他监听器也阻止冒泡。
+</Tip>
 
 ---
 
