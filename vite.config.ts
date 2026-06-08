@@ -8,7 +8,7 @@ import mdx from 'fumadocs-mdx/vite';
 
 export default defineConfig({
   server: {
-    port: 3000,
+    port: 5666,
   },
   plugins: [
     mdx(),

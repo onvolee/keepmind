@@ -1,0 +1,133 @@
+# 浏览器事件传播
+
+当点击 `button` 的时候，实际上也点击了父级 `#panel` ，外层 `#app` ， `body` ， `html` ， `docuemnt` ， `window` ，这就是事件传播的基础。
+
+```javascript title="html"
+<body>
+  <div id="app">
+    <section id="panel">
+      <button id="btn">点击我</button>
+    </section>
+  </div>
+</body>
+```
+
+## 事件触发三阶段
+
+```text
+1. 捕获阶段 capturing phase
+2. 目标阶段 target phase
+3. 冒泡阶段 bubbling phase
+```
+
+当你点击#btn按钮的时候，事件传播完整过程是：
+
+```text
+捕获阶段：window -> document -> html -> body -> #app -> #panel
+目标阶段：#btn
+冒泡阶段：#panel -> #app -> body -> html -> document -> window
+```
+
+默认监听事件是在冒泡阶段执行
+
+```javascript
+btn.addEventListener("click", function () {
+  console.log("button click");
+});
+```
+
+事件委托就是利用了冒泡机制，可以在父元素上绑定监听事件，而不用给每个子原生都绑定上监听，从而达到优化性能的目的。
+
+```javascript
+const list = document.querySelector('#list');
+
+list.addEventListener('click', (event) => {
+  const item = event.target.closest('li');
+
+  if (!item) return
+  if (!list.contains(item)) return
+
+  console.log(item.dataset.id)
+})
+
+<ul id="list">
+  <li data-id="1">用户 1</li>
+  <li data-id="2">用户 2</li>
+  <li data-id="3">用户 3</li>
+</ul>
+```
+
+---
+
+dom.addEventListener(type, (`event`) => ) 中 `Event` 参数中一些关键变量
+
+* type: 事件类型（如 "click"）
+* target: 真正触发的那个元素
+* currentTarget： 当前正在执行这个事件监听器的元素
+* eventPhase： 
+  * `Event.NONE`(0)：这个时间没有事件正在被处理
+  * `Event.CAPTURING_PHASE`(1)：捕获
+  * `Event.AT_TARGET`(2)：目标
+  * `Event.BUBBLING_PHASE`(3)：冒泡
+* bubbles: 是否冒泡
+* cancelable：事件是否可取消，事件默认行为是否可以被 preventDefault() 取消
+* composed：true表示事件是否能穿过Shadow DOM 边界
+* preventDefault(): 阻止默认行为
+* stopPropagation()： 阻止事件继续沿传播路径传播，但不会阻止**当前元素**上其他监听器执行
+* stopImmediatePropagation()：阻止事件继续传播，并阻止**当前元素**上后续监听器执行
+* composedPath()：返回事件传播路径
+* defaultPrevented：默认行为是否已经被阻止
+
+tips: 大部分事件都会默认冒泡, 但这些事件 `focus`, `blur`, `mouseenter`, `mouseleave`, `load`, `error` 不冒泡。
+`focus/blur` 对应可冒泡版本是 `focusin/focusout`。
+`mouseenter/mouseleave` 对应可冒泡的相近事件是 `mouseover/mouseout`。
+
+
+tips: event.stopImmediatePropagation() 作用就是当前元素上的其他监听器也阻止，例如btn注册两个监听器，执行该函数后，该元素上的其他监听器也阻止冒泡。
+
+---
+
+addEventListener(type, () => {}, `options`)中 `options` 参数有：
+```javascript
+{
+  capture: false,
+  once: false,
+  passive: false, // true: 表示 listener 永远不会调用 preventDefault(), 常用于滚动、触摸相关事件。
+  signal: abortController.signal
+}
+```
+
+`passive` 为何重要，如果不确定 js 会不会阻止默认滚动行为，它可能会等待 js 执行完再滚动，会导致页面卡顿
+
+---
+
+给 `#btn` 注册了两个点击事件, 点击按钮，查看日志打印顺序：
+
+```javascript
+btn.addEventListener("click", () => console.log("btn capture"), {
+  capture: true,
+});
+btn.addEventListener("click", (e) => {
+  /**
+   * 在 btn 冒泡阶段阻止继续冒泡，所以不会打印 'inner bubble'
+   * 但这个不会影响点击 inner 的时候冒泡事件，只影响了点击 btn 的时候是否要阻止向上冒泡的行为
+  */
+  e.stopPropagation()
+
+  console.log("btn bubble")
+});
+
+inner.addEventListener("click", () => console.log("inner capture"), {
+  capture: true,
+});
+inner.addEventListener('click', () => console.log('inner bubble'))
+```
+
+<EventProPagation />
+
+---
+
+总结：
+- 捕获阶段是为了让浏览器中父节点有机会比target监听函数更早执行
+- 目标阶段开始执行target监听函数
+- 冒泡阶段顺着事件执行路径向上传播，路径上的父节点监听函数可以拿到target(事件委托也就是在这个阶段)
